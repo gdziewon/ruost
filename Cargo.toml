@@ -1,0 +1,23 @@
+[package]
+name = "ruost"
+version = "0.1.0"
+edition = "2024"
+
+
+### added "panic-strategy": "abort" to target specification, so these arent needed
+#[profile.dev] # used for "cargo build"
+#panic = "abort" # disable stack unwinding on panic (process of cleaning up the call stack when a program encounters a panic)
+#[profile.release] # used for "cargo build --release"
+#panic = "abort"
+
+[dependencies]
+# this crate implements a basic BIOS bootloader without any C dependencies
+bootloader = "0.9"
+# provides a Volatile wrapper type, which guarantees that the reads/writes are not optimized away (needed for VGA buffer)
+volatile = "0.2.6"
+# spinlock, since we dont have blocking support to use Mutexes
+spin = "0.5.2"
+
+[dependencies.lazy_static]
+version = "1.0"
+features = ["spin_no_std"] # needed since we don't link the library

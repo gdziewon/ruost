@@ -1,0 +1,22 @@
+services:
+  kernel:
+    build: .
+    container_name: ruost
+    networks:
+      - ruost-net
+    expose:
+      - "5900"
+  novnc:
+    image: bonigarcia/novnc:1.2.0
+    container_name: novnc
+    networks:
+      - ruost-net
+    depends_on:
+      - kernel
+    ports:
+      - "6080:6080"
+    environment:
+      - VNC_SERVER=ruost:5900
+      - AUTOCONNECT=true
+networks:
+  ruost-net: {}
