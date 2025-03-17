@@ -9,7 +9,8 @@ RUN apk add --no-cache musl-dev lld && \
     rustup override set nightly && \
     rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl && \
     rustup component add llvm-tools-preview --toolchain nightly && \
-    cargo install --locked bootimage
+    cargo install --locked bootimage && \
+    cargo bootimage
 
 # RUNTIME STAGE
 FROM debian:bullseye

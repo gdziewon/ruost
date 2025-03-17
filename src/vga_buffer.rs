@@ -29,7 +29,7 @@ const BUFFER_WIDTH: usize = 80;
 lazy_static! { // lazy static needed here, as Rust’s const evaluator is not able to convert raw pointers to references at compile time
     static ref WRITER: Mutex<Writer> = Mutex::new(Writer { // Mutex needed so it can be mutable
         column_position: 0,
-        color_code: ColorCode::new(Color::LightBlue, Color::Black),
+        color_code: ColorCode::new(Color::Magenta, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer)}, // VGA buffers memmory address is 0xb8000
     });
 }
@@ -148,5 +148,27 @@ struct ColorCode(u8);
 impl ColorCode {
     fn new(foreground: Color, background: Color) -> ColorCode {
         ColorCode((background as u8) << 4 | (foreground as u8))
+    }
+}
+
+#[test_case]
+fn test_println_simple() {
+    println!("test_println_simple output");
+}
+
+#[test_case]
+fn test_println_many() {
+    for _ in 0..200 {
+        println!("test_println_many output");
+    }
+}
+
+#[test_case]
+fn test_println_output() {
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
     }
 }

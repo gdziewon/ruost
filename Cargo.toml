@@ -3,7 +3,6 @@ name = "ruost"
 version = "0.1.0"
 edition = "2024"
 
-
 ### added "panic-strategy": "abort" to target specification, so these arent needed
 #[profile.dev] # used for "cargo build"
 #panic = "abort" # disable stack unwinding on panic (process of cleaning up the call stack when a program encounters a panic)
@@ -17,7 +16,23 @@ bootloader = "0.9"
 volatile = "0.2.6"
 # spinlock, since we dont have blocking support to use Mutexes
 spin = "0.5.2"
+# provides abstraction over x86_64 assembly instructions
+x86_64 = "0.14.2"
+# for communication over serial port (printing data to console when testing)
+uart_16550 = "0.2.0"
 
 [dependencies.lazy_static]
 version = "1.0"
 features = ["spin_no_std"] # needed since we don't link the library
+
+[package.metadata.bootimage] # bootimage runner appends these ares to qemu command for test executables
+# on isa-debug-exit device, when value is written to iobase port, qemu exits with exit status (value << 1) | 1
+test-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", # iobase is port address of the device, iosize is port size in bytes
+"-serial", "stdio", # -serial argument tells quemu to redirect output to stdout
+"-display", "none"] # dont open qemu window when testing
+test-success-exit-code = 33 # map success code to 33 -> (0x10 << 1) | 1
+test-timeout = 120 # max time that tests can run (in seconds), to protect from infinite loops
+
+[[test]]
+name = "should_panic"
+harness = false
