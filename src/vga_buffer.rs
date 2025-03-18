@@ -1,9 +1,11 @@
-
 use volatile::Volatile;
 use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use core::fmt::Write;
+use x86_64::instructions::interrupts;
+
+const VGA_BUFFER_ADDR: u64 = 0xb8000;
 
 #[macro_export] // makes macro available everywhere in crate
 macro_rules! print { // expands to _print function
@@ -20,7 +22,12 @@ macro_rules! println {
 // needs to be public bcs macros need to be able to call it from outside the module
 #[doc(hidden)] // but its considered private, so this attribute hides it from the generated docs
 pub fn _print(args: fmt::Arguments) {
-    WRITER.lock().write_fmt(args).unwrap();
+    interrupts::without_interrupts(|| { // disabling interrupts so we omit deadlocks in case an interrupt would try to write something
+        WRITER
+        .lock()
+        .write_fmt(args)
+        .unwrap();
+    });
 }
 
 const BUFFER_HEIGHT: usize = 25;
@@ -30,7 +37,7 @@ lazy_static! { // lazy static needed here, as Rust’s const evaluator is not ab
     static ref WRITER: Mutex<Writer> = Mutex::new(Writer { // Mutex needed so it can be mutable
         column_position: 0,
         color_code: ColorCode::new(Color::Magenta, Color::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer)}, // VGA buffers memmory address is 0xb8000
+        buffer: unsafe { &mut *(VGA_BUFFER_ADDR as *mut Buffer)}, // VGA buffers memmory address is 0xb8000
     });
 }
 
@@ -146,8 +153,8 @@ pub enum Color {
 struct ColorCode(u8);
 
 impl ColorCode {
-    fn new(foreground: Color, background: Color) -> ColorCode {
-        ColorCode((background as u8) << 4 | (foreground as u8))
+    const fn new(foreground: Color, background: Color) -> ColorCode {
+        Self((background as u8) << 4 | (foreground as u8))
     }
 }
 
@@ -166,9 +173,12 @@ fn test_println_many() {
 #[test_case]
 fn test_println_output() {
     let s = "Some test string that fits on a single line";
-    println!("{}", s);
-    for (i, c) in s.chars().enumerate() {
-        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
-        assert_eq!(char::from(screen_char.ascii_character), c);
-    }
+    interrupts::without_interrupts(|| {
+        let mut writer = WRITER.lock();
+        writeln!(writer, "\n{}", s).expect("writeln failed"); // use writeln bcs it allows writing on already locked writer
+        for (i, c) in s.chars().enumerate() {
+            let screen_char = writer.buffer.chars[BUFFER_HEIGHT - 2][i].read();
+            assert_eq!(char::from(screen_char.ascii_character), c);
+        }
+    });
 }

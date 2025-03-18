@@ -4,23 +4,23 @@
 #![no_std]
 #![no_main]
 #![feature(custom_test_frameworks)]
-#![test_runner(ruost::test_runner)]
+#![test_runner(ruost::test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use ruost::{println, halt};
+use ruost::{println, halt, init};
 
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main(); // no need for cfg(test) attributes because integration test executables are always built test mode
-
     halt()
 }
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    ruost::test_panic_handler(info)
+    ruost::test_utils::test_panic_handler(info)
 }
 
 #[test_case]

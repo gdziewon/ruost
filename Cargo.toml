@@ -20,6 +20,10 @@ spin = "0.5.2"
 x86_64 = "0.14.2"
 # for communication over serial port (printing data to console when testing)
 uart_16550 = "0.2.0"
+# programmable interrupt controller Intel 8259 from late 70s, still supported to this day, easy to set up
+pic8259 = "0.10.1"
+# mapping keyboard scancodes to actual keys
+pc-keyboard = "0.7.0"
 
 [dependencies.lazy_static]
 version = "1.0"
@@ -35,4 +39,8 @@ test-timeout = 120 # max time that tests can run (in seconds), to protect from i
 
 [[test]]
 name = "should_panic"
+harness = false
+
+[[test]]
+name = "stack_overflow"
 harness = false

@@ -2,7 +2,8 @@
 #![no_main]
 
 use core::panic::PanicInfo;
-use ruost::{exit_qemu, serial_print, serial_println, QemuExitCode, halt};
+use ruost::{serial_print, serial_println, halt};
+use ruost::test_utils::{exit_qemu, QemuExitCode};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
@@ -22,5 +23,5 @@ fn should_fail() {
 fn panic(_info: &PanicInfo) -> ! {
     serial_println!("[ok]");
     exit_qemu(QemuExitCode::Success);
-    loop {}
+    halt()
 }
