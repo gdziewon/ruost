@@ -1,11 +1,14 @@
-use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
-use x86_64::instructions::port::Port;
 use pc_keyboard::{layouts, DecodedKey, HandleControl, Keyboard, ScancodeSet1};
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
 use spin::Mutex;
+use x86_64::{
+    structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode},
+    instructions::port::Port,
+    registers::control::Cr2,
+};
 
-use crate::{println, print};
+use crate::{println, print, halt};
 use crate::gdt::DOUBLE_FAULT_IST_INDEX;
 
 pub const PIC_1_OFFSET: u8 = 32; // 32 so it wont overlap with exception handler values
@@ -20,6 +23,7 @@ lazy_static! { // IDT is a table with addresses to functions that CPU should exe
     static ref IDT: InterruptDescriptorTable = {
         let mut idt = InterruptDescriptorTable::new(); // each exception has it's own entry
         idt.breakpoint.set_handler_fn(breakpoint_handler);
+        idt.page_fault.set_handler_fn(page_fault_handler);
         unsafe {
             idt.double_fault.set_handler_fn(double_fault_handler)
                 .set_stack_index(DOUBLE_FAULT_IST_INDEX); // needed in case of stack overflow, handler should use fresh stack
@@ -60,6 +64,17 @@ extern "x86-interrupt" fn breakpoint_handler(
     stack_frame: InterruptStackFrame)
 {    
     println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
+}
+
+extern "x86-interrupt" fn page_fault_handler(
+    stack_frame: InterruptStackFrame,
+    error_code: PageFaultErrorCode
+) {
+    println!("EXCEPTION: PAGE FAULT");
+    println!("Accessed Address: {:?}", Cr2::read());
+    println!("Error Code: {:?}", error_code);
+    println!("{:#?}", stack_frame);
+    halt()
 }
 
 // the most important exception handler - kind of catch all - prevents triple fault

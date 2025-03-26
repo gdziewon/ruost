@@ -4,20 +4,23 @@
 #![feature(abi_x86_interrupt)]
 #![test_runner(test_utils::test_runner)]
 #![reexport_test_harness_main = "test_main"]
-#![warn(
-     clippy::all,
-     clippy::pedantic,
-     clippy::nursery,
- )]
 
+extern crate alloc;
+pub mod allocator;
 pub mod gdt;
 pub mod interrupts;
+pub mod memory;
 pub mod serial;
 pub mod vga_buffer;
 pub mod test_utils;
 
 #[cfg(test)]
 use core::panic::PanicInfo;
+#[cfg(test)]
+use bootloader::{entry_point, BootInfo};
+
+#[cfg(test)]
+entry_point!(test_kernel_main);
 
 pub fn init() {
     gdt::init();
@@ -33,11 +36,11 @@ pub fn halt() -> ! {
 }
 
 #[cfg(test)]
-#[unsafe(no_mangle)]
-pub extern "C" fn _start() -> ! {
+fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
+    // like before
     init();
     test_main();
-    halt()
+    halt();
 }
 
 #[cfg(test)]

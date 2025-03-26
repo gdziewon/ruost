@@ -11,7 +11,7 @@ edition = "2024"
 
 [dependencies]
 # this crate implements a basic BIOS bootloader without any C dependencies
-bootloader = "0.9"
+bootloader = {version = "0.9", features = ["map_physical_memory"]} # maps entire physical memory into virtual mem
 # provides a Volatile wrapper type, which guarantees that the reads/writes are not optimized away (needed for VGA buffer)
 volatile = "0.2.6"
 # spinlock, since we dont have blocking support to use Mutexes
@@ -24,6 +24,8 @@ uart_16550 = "0.2.0"
 pic8259 = "0.10.1"
 # mapping keyboard scancodes to actual keys
 pc-keyboard = "0.7.0"
+
+linked_list_allocator = "0.9.0"
 
 [dependencies.lazy_static]
 version = "1.0"
