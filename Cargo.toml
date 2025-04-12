@@ -24,12 +24,26 @@ uart_16550 = "0.2.0"
 pic8259 = "0.10.1"
 # mapping keyboard scancodes to actual keys
 pc-keyboard = "0.7.0"
-
+# memory allocator based on linked list
 linked_list_allocator = "0.9.0"
-
+# alows initialization of static variables "lazely" - during runtime
 [dependencies.lazy_static]
 version = "1.0"
 features = ["spin_no_std"] # needed since we don't link the library
+# implements various mutex-free types for concurrent programming
+[dependencies.crossbeam-queue]
+version = "0.3.11"
+default-features = false # to make it no_std compatible
+features = ["alloc"]
+# for OnceCell, which makes it possible to perform a safe one-time initialization of static values
+[dependencies.conquer-once]
+version = "0.2.0"
+default-features = false
+# for Stream trait
+[dependencies.futures-util]
+version = "0.3.4"
+default-features = false
+features = ["alloc"]
 
 [package.metadata.bootimage] # bootimage runner appends these ares to qemu command for test executables
 # on isa-debug-exit device, when value is written to iobase port, qemu exits with exit status (value << 1) | 1

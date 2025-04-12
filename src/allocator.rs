@@ -2,10 +2,8 @@ pub mod bump;
 pub mod linked_list;
 pub mod fixed_size_block;
 
-use alloc::alloc::{GlobalAlloc, Layout};
+use bootloader::BootInfo;
 use x86_64::{structures::paging::{mapper::{MapToError, Mapper}, FrameAllocator, Page, PageTableFlags, Size4KiB}, VirtAddr};
-use core::ptr::null_mut;
-use linked_list_allocator::LockedHeap;
 
 use fixed_size_block::FixedSizeBlockAllocator;
 
@@ -15,7 +13,7 @@ static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAl
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 
-pub fn init_heap(
+fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>
 ) -> Result<(), MapToError<Size4KiB>> {
@@ -42,6 +40,17 @@ pub fn init_heap(
     }
 
     Ok(())
+}
+
+pub fn init(boot_info: &'static BootInfo) {
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { super::memory::init(phys_mem_offset) };
+    let mut frame_allocator = unsafe {
+        super::memory::BootInfoFrameAllocator::init(&boot_info.memory_map)
+    };
+
+    init_heap(&mut mapper, &mut frame_allocator)
+        .expect("heap initialization failed");
 }
 
 // align needs to be power of 2

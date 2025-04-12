@@ -20,6 +20,7 @@ pub struct FixedSizeBlockAllocator {
 // linked list for each size of block
 // it comes with big performence boost over standard linked list allocator
 // when using powers of 2 as blocks sizes, 3/4 of memory is wasted on average tho
+// in this implementation lists are lazily filled in alloc and created blocks are never freed, which might result in huge fragmentation over time
 impl FixedSizeBlockAllocator {
     pub const fn new() -> Self {
         const EMPTY: Option<&'static mut ListNode> = None;

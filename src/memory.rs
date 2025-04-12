@@ -2,6 +2,7 @@ use x86_64::{
     registers::control::Cr3, structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB}, PhysAddr, VirtAddr
 };
 use bootloader::bootinfo::{MemoryMap, MemoryRegionType};
+use bootloader::BootInfo;
 
 pub struct BootInfoFrameAllocator {
     memory_map: &'static MemoryMap,
