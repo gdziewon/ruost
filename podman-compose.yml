@@ -1,6 +1,7 @@
 services:
   kernel:
-    build: .
+    #build: .
+    image: localhost/ruost
     container_name: ruost
     networks:
       - ruost-net

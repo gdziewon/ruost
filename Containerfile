@@ -1,14 +1,16 @@
 # BUILD STAGE
 FROM rust:alpine as builder
 
-COPY . /build
-WORKDIR /build
-
 RUN apk add --no-cache musl-dev lld && \
     rustup install nightly && \
     rustup override set nightly && \
     rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl && \
-    rustup component add llvm-tools-preview --toolchain nightly && \
+    rustup component add llvm-tools-preview --toolchain nightly
+
+COPY . /build
+WORKDIR /build
+
+RUN rm /build/Cargo.lock && \
     cargo install --locked bootimage && \
     cargo bootimage
 
