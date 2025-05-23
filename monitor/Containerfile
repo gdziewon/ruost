@@ -1,0 +1,20 @@
+FROM python:3.13-slim-bookworm
+
+RUN groupadd -r monitor && \
+    useradd -r -g monitor monitor && \
+    mkdir -p /logs && \
+    chown -R monitor:monitor /logs
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY monitor.py .
+
+VOLUME /logs
+VOLUME /podman.sock
+
+USER monitor
+
+CMD ["python", "monitor.py"]

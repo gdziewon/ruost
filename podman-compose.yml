@@ -1,12 +1,13 @@
 services:
   kernel:
-    #build: .
+    build: ./os
     image: localhost/ruost
     container_name: ruost
     networks:
       - ruost-net
     expose:
       - "5900"
+
   novnc:
     image: bonigarcia/novnc:1.2.0
     container_name: novnc
@@ -19,5 +20,16 @@ services:
     environment:
       - VNC_SERVER=ruost:5900
       - AUTOCONNECT=true
+
+  monitor:
+    build: ./monitor
+    volumes:
+      - ./monitor/monitor_logs:/logs:rw
+      - /run/user/1000/podman/podman.sock:/podman.sock:rw
+    environment:
+      - DOCKER_HOST=unix:///podman.sock
+    security_opt:
+      - label=disable
+
 networks:
   ruost-net: {}
